@@ -43,9 +43,9 @@ class EstimationFactorReturn(Sensor):
         y_adj = y[(~dropna) & mask]
 
         if weight:
-            model = sm.WLS(y_adj, x_adj, hasconst=False, weights=weight)
+            model = sm.WLS(y_adj, x_adj, hasconst=False, weights=weight, missing="drop")
         else:
-            model = sm.OLS(y_adj, x_adj, hasconst=False)
+            model = sm.OLS(y_adj, x_adj, hasconst=False, missing="drop")
 
         result = model.fit()
         coefficients = result.params

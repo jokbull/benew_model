@@ -16,6 +16,7 @@ from collider.data.pipeline.sensor_flow import SensorFlow
 
 from sensor.get_pool_v2 import GetPool
 from sensor.save_to_npy import SaveToBundleSensor
+from sensor.get_factor_data_v2 import GetFactorData
 
 
 class flow_forward_return(Strategy):
@@ -39,29 +40,18 @@ class flow_forward_return(Strategy):
         init_succeed = super().initialize()
 
         if init_succeed:
-            self._init_prepare_flow()
             self._init_estimation_flow()
 
-            self._prepare_flow.run(date="99991231")
-
         return init_succeed
-
-    def _init_prepare_flow(self):
-        self._prepare_flow = SensorFlow(name="prepare_flow", data_manager=self.user_context.DM)
-
-        # module 3. 确定Risk因子清单
-        self._prepare_flow.add_next_step2(name="riskFactorList", sensor=GetFactorList, call=None,
-                                          kwds={"factor_list": self.user_context.riskFactorDataFrame})
 
     def _init_estimation_flow(self):
         flow_name = self.user_context.flow_config.get("est_flow_name", "est_flow")
         self._estimation_flow = SensorFlow(name=flow_name, data_manager=self.user_context.DM)
 
-        # factor date = yesterday when run at before_trading.
-        # factor_date = today when run at after_trading.
+        # factor date
         self._estimation_flow.add_next_step2(name="factor_as_of_date",
                                              sensor=GetDate,
-                                             kwds={'offset': 1}
+                                             kwds={'offset': self.user_context.forward_period + 2}
                                              )
 
         # module 4. 确定对Risk数据进行数据清洗的集合
@@ -70,24 +60,27 @@ class flow_forward_return(Strategy):
                                              call=None,
                                              # 这里用factor_as_of_date
                                              input_var=[f"{flow_name}.factor_as_of_date.date"],
-                                             kwds={"pool_name": self.user_context.pool_name},
-                                             silent=True)
+                                             kwds={"pool_name": self.user_context.pool_name})
+
+        factorList = {}
+        for k in self.user_context.riskFactorDataFrame.factor_dataFrame.factor:
+            factorList[k] = FACTOR_STYLE.SECTOR if k.startswith("industry") else FACTOR_STYLE.RISK
 
         # module 6. 取risk数据
         self._estimation_flow.add_next_step2(name="riskFactorData",
                                              sensor=GetFactorData,
                                              call=None,
-                                             input_var=["prepare_flow.riskFactorList.factorList",
-                                                        f"{flow_name}.riskPool.pool",
+                                             input_var=[f"{flow_name}.riskPool.pool",
                                                         f"{flow_name}.factor_as_of_date.date"
                                                         ],
-                                             kwds={"data_process_methods": {
-                                                 FACTOR_STYLE.SECTOR: [],
-                                                 FACTOR_STYLE.RISK: [
-                                                     DataProcessing.do_process_extremum_winsorize,
-                                                     DataProcessing.do_z_score_processing
-                                                 ]
-                                             }},
+                                             kwds={"factorList": factorList,
+                                                   "data_process_methods": {
+                                                       FACTOR_STYLE.SECTOR: [],
+                                                       FACTOR_STYLE.RISK: [
+                                                           DataProcessing.do_process_extremum_winsorize,
+                                                           DataProcessing.do_z_score_processing
+                                                       ]
+                                                   }},
                                              silent=False)
 
         try:
@@ -131,7 +124,6 @@ class flow_forward_return(Strategy):
             input_var=[f"{flow_name}.factor_as_of_date.date",
                        f"{flow_name}.returnData.stockReturn"],
             kwds={
-                'path': "./clean_data",
                 'bundle': self.user_context.config.base.data_bundle_path,
                 'suffix': 'f1',
                 'type': "return",

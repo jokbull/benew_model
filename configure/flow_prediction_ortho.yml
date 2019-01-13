@@ -13,8 +13,3 @@ strategy:
        flow_config:
            est_flow_name: flow_estimation
            pred_flow_name: flow_prediction_ortho
-mod:
-   # 持久化 和 生成保存运行状态
-   persist:
-       enabled: FALSE
-       content: []

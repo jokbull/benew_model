@@ -12,3 +12,4 @@ strategy:
        risk_file: configure/BarraStyle.csv
        flow_config:
            est_flow_name: flow_ortho
+           forward_return_flow_name: flow_forward_return

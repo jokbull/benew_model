@@ -7,6 +7,7 @@ strategy:
    # 通过该参数可以将预定义变量传入 `context` 内。
    context_vars:
        pool_name: pool_01_final_f1
+       forward_period: 5
        alpha_file: configure/f.csv
        risk_file: configure/BarraStyle.csv
        flow_config:

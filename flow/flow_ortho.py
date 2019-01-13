@@ -46,25 +46,13 @@ class flow_ortho(Strategy):
         init_succeed = super().initialize()
 
         if init_succeed:
-            self._init_prepare_flow()
             self._init_estimation_flow()
-
-            self._prepare_flow.run(date="99991231")
 
         return init_succeed
 
-    def _init_prepare_flow(self):
-        self._prepare_flow = SensorFlow(name="prepare_flow", data_manager=self.user_context.DM)
-
-        # module 1. 确定Alpha因子清单
-        self._prepare_flow.add_next_step2(name="alphaFactorList", sensor=GetFactorList, call=None,
-                                          kwds={"factor_list": self.user_context.alphaFactorDataFrame})
-        # module 3. 确定Risk因子清单
-        self._prepare_flow.add_next_step2(name="riskFactorList", sensor=GetFactorList, call=None,
-                                          kwds={"factor_list": self.user_context.riskFactorDataFrame})
-
     def _init_estimation_flow(self):
         flow_name = self.user_context.flow_config.get("est_flow_name", "est_flow")
+        risk_flow_name = self.user_context.flow_config.get("forward_return_flow_name", "flow_forward_return")
         self._estimation_flow = SensorFlow(name=flow_name, data_manager=self.user_context.DM)
 
         # factor date =  forward_period + 2
@@ -79,42 +67,28 @@ class flow_ortho(Strategy):
                                              call=None,
                                              # 这里用factor_as_of_date
                                              input_var=[f"{flow_name}.factor_as_of_date.date"],
-                                             kwds={"pool_name": self.user_context.pool_name},
-                                             silent=True)
+                                             kwds={"pool_name": self.user_context.pool_name})
 
-        # module 6. 取risk数据
-        self._estimation_flow.add_next_step2(name="riskFactorData",
-                                             sensor=GetFactorData,
-                                             call=None,
-                                             input_var=["prepare_flow.riskFactorList.factorList",
-                                                        f"{flow_name}.riskPool.pool",
-                                                        f"{flow_name}.factor_as_of_date.date"
-                                                        ],
-                                             kwds={"data_process_methods": {
-                                                 FACTOR_STYLE.SECTOR: [],
-                                                 FACTOR_STYLE.RISK: [
-                                                     DataProcessing.do_process_extremum_winsorize,
-                                                     DataProcessing.do_z_score_processing
-                                                 ]
-                                             }},
-                                             silent=True)
+        factorList = {}
+        for k in self.user_context.alphaFactorDataFrame.factor_dataFrame.factor:
+            factorList[k] = FACTOR_STYLE.ALPHA
 
         # module 7. 取alpha数据
         self._estimation_flow.add_next_step2(name="alphaFactorData",
                                              sensor=GetFactorData,
                                              call=None,
-                                             input_var=[f"{flow_name}.riskFactorData.exposure",
-                                                        "prepare_flow.alphaFactorList.factorList",
+                                             input_var=[f"{risk_flow_name}.riskFactorData.exposure",
                                                         f"{flow_name}.riskPool.pool",
                                                         f"{flow_name}.factor_as_of_date.date"
                                                         ],
-                                             kwds={"data_process_methods": {
-                                                 FACTOR_STYLE.ALPHA: [
-                                                     DataProcessing.do_process_extremum_winsorize,
-                                                     DataProcessing.do_z_score_processing,
-                                                     DataProcessing.neutrialize
-                                                 ]
-                                             }},
+                                             kwds={"factorList": factorList,
+                                                   "data_process_methods": {
+                                                       FACTOR_STYLE.ALPHA: [
+                                                           DataProcessing.do_process_extremum_winsorize,
+                                                           DataProcessing.do_z_score_processing,
+                                                           DataProcessing.neutrialize
+                                                       ]
+                                                   }},
                                              silent=True)
 
         self._estimation_flow.add_next_step2(name="orthogonalization",
@@ -124,8 +98,7 @@ class flow_ortho(Strategy):
                                                         f"{flow_name}.alphaFactorData.factorName",
                                                         f"{flow_name}.riskPool.pool"
                                                         ],
-                                             kwds={}
-                                             )
+                                             kwds={})
 
         self._estimation_flow.add_next_step2(
             name="saveToNpy_alpha",
@@ -135,7 +108,6 @@ class flow_ortho(Strategy):
                        f"{flow_name}.orthogonalization.exposure",
                        f"{flow_name}.orthogonalization.factorName"],
             kwds={
-                'path': "./clean_data",
                 'bundle': self.user_context.config.base.data_bundle_path,
                 'type': "factor",
                 'suffix': 'f1'

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# @Time    : 12/8/2018 2:36 PM
+# @Time    : 13e/01/2019
 # @Author  : scrat
 # @File    : run.py
 # @Software: PyCharm
@@ -32,8 +32,6 @@ def run(**kwargs):
     当指定了flow_name的时候，默认查找flow_name.yml作为配置，再用指定的文件做配置，否则报错。
     当没有指定flow_name的时候，报错
     """
-    if flow_name is None:
-        flow_name = 'flow_estimation'
 
     if flow_name is not None:
         new_config_file = os.path.join("configure", "%s.yml" % flow_name)
@@ -61,7 +59,7 @@ def run(**kwargs):
 
 
 if __name__ == '__main__':
-    # run(flow_name="flow_optim", configure_file=None)
+    # run(flow_name="flow_prediction_ortho", configure_file=None)
     run()
 
     # from common.data_source_from_bundle import trading_dates

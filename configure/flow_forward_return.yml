@@ -10,5 +10,7 @@
          forward_period: 5
          pool_name: pool_01_final_f1
          risk_file: configure/BarraStyle.csv
+         est_open_price: trade_price_0935_1000_aft
+         est_close_price: trade_price_0935_1000_aft
          flow_config:
              est_flow_name: flow_forward_return

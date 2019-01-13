@@ -75,12 +75,11 @@ class flow_estimation(Strategy):
                                              call=None,
                                              # 这里用factor_as_of_date
                                              input_var=[f"{flow_name}.factor_as_of_date.date"],
-                                             kwds={"pool_name": self.user_context.pool_name},
-                                             silent=False)
+                                             kwds={"pool_name": self.user_context.pool_name})
 
         factorList = {}
         for k in self.user_context.alphaFactorDataFrame.factor_dataFrame.factor:
-            factorList[k + "_f1"] = FACTOR_STYLE.SECTOR
+            factorList[k + "_f1"] = FACTOR_STYLE.ALPHA
 
         # module 7. 取alpha数据
         self._estimation_flow.add_next_step2(name="orthogonalization",
@@ -92,13 +91,15 @@ class flow_estimation(Strategy):
                                              ],
                                              kwds={"factorList": factorList})
 
+        return_factor_list = {}
+        return_factor_list['forward_return_%s_f1' % self.user_context.forward_period] = FACTOR_STYLE.ALPHA
         self._estimation_flow.add_next_step2(name="returnData",
                                              sensor=GetFactorData,
                                              call=None,
                                              input_var=[f"{flow_name}.riskPool.pool",
                                                         f"{flow_name}.factor_as_of_date.date"
                                                         ],
-                                             kwds={"factorList": {'forward_return_5_f1': FACTOR_STYLE.ALPHA}})
+                                             kwds={"factorList": return_factor_list})
 
         # module 10. 模型估计
         self._estimation_flow.add_next_step2(name="OLS",
@@ -125,7 +126,6 @@ class flow_estimation(Strategy):
                 f"{flow_name}.OLS.fitted": "stockReturn"
             },
             kwds={
-                'path': "./clean_data",
                 'bundle': self.user_context.config.base.data_bundle_path,
                 'suffix': 'f1',
                 'type': "return",

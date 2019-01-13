@@ -1,0 +1,11 @@
+base:
+   # 回测起始日期，str类型
+   start_date: "20100101"
+   # 回测结束日期(如果是实盘，则忽略该配置)，str类型
+   end_date: "20190111"
+strategy:
+   # 通过该参数可以将预定义变量传入 `context` 内。
+   context_vars:
+       pool_name: pool_01
+       flow_config:
+           est_flow_name: flow_pool

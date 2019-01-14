@@ -17,7 +17,7 @@ from collider import run_class
 from collider.utils.logger import system_log
 
 
-@click.command()
+# @click.command()
 @click.option("-n", "--flow_name", default=None)
 @click.option("-f", "--configure_file", default=None)
 @click.help_option("-h", "--help")
@@ -59,8 +59,8 @@ def run(**kwargs):
 
 
 if __name__ == '__main__':
-    # run(flow_name="flow_prediction_ortho", configure_file=None)
-    run()
+    run(flow_name="flow_optim_forward_return", configure_file=None)
+    # run()
 
     # from common.data_source_from_bundle import trading_dates
     # td = trading_dates()

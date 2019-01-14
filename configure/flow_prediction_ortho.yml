@@ -2,7 +2,7 @@ base:
    # 回测起始日期，str类型
    start_date: "20180101"
    # 回测结束日期(如果是实盘，则忽略该配置)，str类型
-   end_date: "20190108"
+   end_date: "20190111"
    resume_mode: False
 strategy:
    # 通过该参数可以将预定义变量传入 `context` 内。

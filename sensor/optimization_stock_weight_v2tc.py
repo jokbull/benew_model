@@ -24,7 +24,7 @@ class OptimizationStockWeightV2tc(Sensor):
         tc_a = kwargs.get("tc_a", 0.5)  # 交易惩罚项中参数
         tc_b = kwargs.get("tc_b", 1)  # 交易惩罚项中参数
         tc_power = kwargs.get("tc_power", 1.5)  # 交易惩罚项中参数
-        tc_c = kwargs.get("tc_power",0)
+        tc_c = kwargs.get("tc_power", 0)
         n = kwargs.get("top", 200)  # 前n个股票进入优化器
         single_max = kwargs.get("single_max", 0.02)  # 个股最大权重
         total_value = kwargs.get("total_value", 1000000)
@@ -64,6 +64,7 @@ class OptimizationStockWeightV2tc(Sensor):
         success = False
         while (not success) and n < 1500:
             stock_return = mp.stockReturn.copy()
+            stock_return[np.any(np.isnan(exog), axis=1)] = np.nan
 
             # region 计算进行优化的股票集合
             # 1. mp.pool中计算top_flag

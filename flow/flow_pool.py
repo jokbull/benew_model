@@ -42,7 +42,7 @@ class flow_pool(Strategy):
         flow_name = self.user_context.flow_config.get("est_flow_name", "est_flow")
         self._estimation_flow = SensorFlow(name=flow_name, data_manager=self.user_context.DM)
 
-        # factor date =  forward_period + 2
+        # factor date = yesterday
         self._estimation_flow.add_next_step2(name="factor_as_of_date",
                                              sensor=GetDate,
                                              kwds={'offset': 1}
@@ -68,8 +68,7 @@ class flow_pool(Strategy):
             kwds={
                 'bundle': self.user_context.config.base.data_bundle_path,
                 'type': "pool",
-                'name': "pool_01_final",
-                'suffix': 'f1'
+                'name': "pool_01_final"
             }
         )
 

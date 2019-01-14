@@ -1,0 +1,29 @@
+whitelist: [base, extra, mod]
+
+base:
+    # bundle magic number
+    stock_num: 4000
+    # 数据源所存储的文件路径
+    data_bundle_path: /Users/scrat/bundle
+    # 回测起始日期，str类型
+    start_date: "20100101"
+    # 回测结束日期(如果是实盘，则忽略该配置)，str类型
+    end_date: "20181231"
+    # 运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易。
+    run_type: b
+    # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
+    frequency: 1d
+    # Benchmark，如果不设置，默认没有基准参照。
+    benchmark: 000905.SH
+    # 默认开启 resume 功能, 在结束的时候，生成一个pickle文件，保存strategyContext. 所以必须有persist_mod的支持，不然resume会失效。
+    resume_mode: False
+
+strategy:
+    # 默认使用的池子
+    pool_name: pool_01_final_f1
+    # 通过该参数可以将预定义变量传入 `context` 内。
+    context_vars:
+        flow_config:
+            flow_name: fake_forward_return
+
+

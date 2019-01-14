@@ -6,8 +6,11 @@ from collider.utils.data_process import DataProcessing
 from sensor.optimization_stock_weight_v2tc import OptimizationStockWeightV2tc
 from sensor.get_fundamental_pool_v2 import GetFundamentalPool
 from sensor.get_factor_data_v2 import GetFactorData
+from sensor.fake_forward_return import FakeForwardReturn
+from sensor.save_to_npy import SaveToBundleSensor
 
-class flow_optim(L1Norm):
+
+class flow_optim_v1_forward_return(L1Norm):
     def initialize(self):
         # self.user_context.update("pool_name", "pool_01")
 
@@ -125,30 +128,58 @@ class flow_optim(L1Norm):
                                              },
                                        silent=False)
 
-
         factorList = {}
         for k in self.user_context.alphaFactorDataFrame.factor_dataFrame.factor:
             factorList[k + "_f1"] = FACTOR_STYLE.ALPHA
 
         # module 7. 取alpha数据
         self._optim_flow.add_next_step2(name="alphaPredData",
-                                             sensor=GetFactorData,
-                                             call=None,
-                                             input_var=[
-                                                 f"{optim_flow}.factor_as_of_date.date"
-                                             ],
-                                             kwds={"factorList": factorList})
+                                        sensor=GetFactorData,
+                                        call=None,
+                                        input_var=[
+                                            f"{optim_flow}.factor_as_of_date.date"
+                                        ],
+                                        kwds={"factorList": factorList})
+
+        # module 7. 取true_forward_return数据
+        self._optim_flow.add_next_step2(name="forwardReturnData",
+                                        sensor=GetFactorData,
+                                        call=None,
+                                        input_var=[
+                                            f"{optim_flow}.factor_as_of_date.date"
+                                        ],
+                                        kwds={"factorList": {'forward_return_5_f1': FACTOR_STYLE.ALPHA}})
+
+        # 对true_forward_return加入噪声
+        self._optim_flow.add_next_step2(name="fakeForwardReturnData",
+                                        sensor=FakeForwardReturn, call=None,
+                                        input_var=[
+                                            f"{optim_flow}.forwardReturnData.exposure"
+                                        ],
+                                        kwds={})
+
+
+
+
+        # module 8. 取fitted_forward_return(也是用到未来数据）
+        self._optim_flow.add_next_step2(name="fittedForwardReturnData",
+                                        sensor=GetFactorData,
+                                        call=None,
+                                        input_var=[
+                                            f"{optim_flow}.factor_as_of_date.date"
+                                        ],
+                                        kwds={"factorList": {'flow_estimation_fitted_f1': FACTOR_STYLE.ALPHA}})
 
 
         kwds = {}
         kwds.update(self.optim_options)
         kwds.update({'total_value': 10000000})
-        kwds.update({'tc_b': 5})
-        kwds.update({'tc_a': 0.5})
+        # kwds.update({'tc_b': 5})
+        # kwds.update({'tc_a': 0.5})
         self._optim_flow.add_next_step(sensor=OptimizationStockWeightV2tc,
                                        args=["optimizationStockWeight", [
 
-                                           "%s.predictionStockReturn.stockReturn" % prediction_flow,
+                                           "%s.fakeForwardReturnData.exposure" % optim_flow,
                                            "%s.predictionFactorCovariance.factorCovariance" % prediction_flow,
 
                                            "%s.alphaPredData.exposure" % optim_flow,
@@ -164,9 +195,10 @@ class flow_optim(L1Norm):
                                                  "%s.alphaPredData.factorName" % optim_flow: "alphaName",
                                                  "%s.riskFactorData.exposure" % forward_return_flow: "riskExposure",
                                                  "%s.riskFactorData.factorName" % forward_return_flow: "riskName",
+                                                 "%s.fakeForwardReturnData.exposure" % optim_flow: 'stockReturn'
                                              }],
                                        kwds=kwds,
-                                       silent=False)
+                                       silent=True)
 
         self._optim_flow.add_next_step2(name="dumpTargetWeight",
                                         sensor=DumpTargetWeight,

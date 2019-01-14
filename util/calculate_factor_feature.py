@@ -54,8 +54,8 @@ def calculate_tvalue(a, b, pool, **kwargs):
 
 
 if __name__ == "__main__":
-    start_date = "20180701"
-    end_date = "20181226"
+    start_date = "20110501"
+    end_date = "20181231"
     factors = [
                # "benew_p5_ma10_hist_tvalue_p06_20180531_t7_0606221539248_after",
                # "benew_p5_ma10_0322001055_after",
@@ -70,7 +70,8 @@ if __name__ == "__main__":
                # "benew_p02_noma_tvalue_20180901_tp_0935_1000_0923223647237_after",
                # "benew_p02_WTOP_R1011_20180928_tp_0935_1000_1017133635924_after",
                "predicted_stock_return_f1",
-               "flow_estimation_fitted_f1"
+               "flow_estimation_fitted_f1",
+               "fake_forward_return_f1"
                ]
     pool_name = "pool_01_final_f1"
     forward_return_name = "forward_return_5_f1"
@@ -86,5 +87,5 @@ if __name__ == "__main__":
                                       direction=1)
 
     df = pd.DataFrame(result, index=dates, columns=factors)
-    df.to_csv("test_IC.csv")
+    df.to_csv("model_f_IC.csv")
 

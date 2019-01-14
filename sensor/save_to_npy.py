@@ -53,7 +53,7 @@ class SaveToBundleSensor(Sensor):
 
         datatype = kwargs.get("type", "factor")
         outpath = kwargs.get("bundle", "/data/bundle")
-        suffix = kwargs.get("suffix", "TEST")
+        suffix = kwargs.get("suffix", "")
 
         if datatype == "pool":
             data = mp.pool

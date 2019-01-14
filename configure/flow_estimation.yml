@@ -1,6 +1,6 @@
 base:
    # 回测起始日期，str类型
-   start_date: "20170101"
+   start_date: "20100310"
    # 回测结束日期(如果是实盘，则忽略该配置)，str类型
    end_date: "20190111"
 strategy:

@@ -16,3 +16,13 @@
 5. flow_prediction_ortho, 预测股票未来收益等
 6. flow_optim, 生成投资组合
 
+#### optimization flow:
+这个flow是从模型到投资组合，有如下不同的版本：
+* flow_optim_v0.py:  传统的优化版本
+* flow_optim_v0_forward_return.py: 基于v0，使用了未来数据做研究使用。
+* flow_optim_v1.py: 动态transaction_cost的优化版本
+* flow_optim_v1_forward_return: 基于flow_optim，使用了未来数据做研究使用。
+
+
+#### 研究项目之FakeForwardReturn
+* flow_fake_forward_return: 在生成forward_return之后，这个产生混入噪声的forward_return.

@@ -6,9 +6,9 @@ base:
     # 数据源所存储的文件路径
     data_bundle_path: /Users/scrat/bundle
     # 回测起始日期，str类型
-    start_date: "20180101"
+    start_date: "20110501"
     # 回测结束日期(如果是实盘，则忽略该配置)，str类型
-    end_date: "20190111"
+    end_date: "20181231"
     # 运行类型，`b` 为回测，`p` 为模拟交易, `r` 为实盘交易。
     run_type: b
     # 目前支持 `1d` (日线回测) 和 `1m` (分钟线回测)，如果要进行分钟线，请注意是否拥有对应的数据源，目前开源版本是不提供对应的数据源的。
@@ -22,8 +22,7 @@ strategy:
     # 默认使用的池子
     pool_name: pool_01_final_f1
     # 通过该参数可以将预定义变量传入 `context` 内。
-    context_vars: 
-        pool_name: pool_01_final_f1
+    context_vars:
         rebalance_oddlots: True 
         alpha_file: configure/f.csv
         risk_file: configure/BarraStyle.csv
@@ -49,7 +48,7 @@ mod:
     # 持久化 和 生成保存运行状态
     persist:
         enabled: True
-        report_save_path: ../report
+        report_save_path: report/optim_v0_fake
         content: ["trades", "orders", "holdings", "net_values", "save"]
     broker:
         enabled: True

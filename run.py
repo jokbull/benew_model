@@ -17,10 +17,14 @@ from collider import run_class
 from collider.utils.logger import system_log
 
 
-# @click.command()
+@click.command()
 @click.option("-n", "--flow_name", default=None)
 @click.option("-f", "--configure_file", default=None)
 @click.help_option("-h", "--help")
+def cli_run(**kwargs):
+    run(**kwargs)
+
+
 def run(**kwargs):
     flow_name = kwargs['flow_name']
     config_file = kwargs['configure_file']
@@ -58,16 +62,7 @@ def run(**kwargs):
     print(result)
 
 
-if __name__ == '__main__':
-    run(flow_name="flow_estimation", configure_file=None)
-    # run()
 
-    # from common.data_source_from_bundle import trading_dates
-    # td = trading_dates()
-    # for i in [5]:
-    #     def fix_config(config):
-    #         config['strategy']['context_vars']['forward_period'] = i
-    #         config['base']['end_date'] = td.get_previous_trading_date(config['base']['end_date'], i)
-    #         return config
-    #     run(flow_name="flow_forward_return", configure_file=None, fix_config=fix_config)
-    #
+if __name__ == '__main__':
+    # run(flow_name="flow_fake_forward_return", configure_file=None)
+    cli_run()

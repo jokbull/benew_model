@@ -49,7 +49,8 @@ class flow_fake_forward_return(Strategy):
         # 对true_forward_return加入噪声
         fake_settings = {
             'scaler': 0.1,
-            'sigma': 0.02
+            'sigma': 0.05,
+            'shrinkage': 0.2
         }
         self._optim_flow.add_next_step2(name="fakeForwardReturnData",
                                         sensor=FakeForwardReturn, call=None,

@@ -72,6 +72,38 @@ def calculate_factor_autocorrelation(factors, dates, pool_name, **kwargs):
         rawIC = np.array([calculate_autocorrelation(f, dates, pool, **kwargs) for f in factors])
         return rawIC
 
+def calculate_hithot(a, b, pool, **kwargs):
+    factor_topN = kwargs.get("factor_topN", 500)
+    ret_topN = kwargs.get("ret_topN", 1000)
+
+    # a 是因子值，b是forward_return
+    ret = np.where(pool, b, np.nan)
+    v = np.where(pool, a, np.nan)
+
+    code_a = np.argsort(-ret)[:ret_topN]
+    code_b = np.argsort(-v)[:factor_topN]
+
+    intersec = set(code_a).intersection(set(code_b))
+    ratio = len(intersec) * 1.0 / len(code_b)
+    return ratio
+
+
+def calculate_topret(a, b, pool, **kwargs):
+    topN = kwargs.get("topN", 500)
+    weight = kwargs.get("weight", np.ones(topN))
+
+    weight /= np.nansum(weight)
+
+    ret = np.where(pool, b, np.nan)
+    v = np.where(pool, a, np.nan)
+
+    code_index = np.argsort(-v)[:topN]
+    return np.nansum(ret[code_index] * weight)
+
+
+
+
+
 
 if __name__ == "__main__":
     start_date = "20110218"
@@ -91,7 +123,7 @@ if __name__ == "__main__":
         # 'benew_p02_WTOP_R1011_20180928_tp_0935_1000_1017133635924_after_f1',
         # 'benew_p1_noma_tvalue_20180702_0722152621667_after_f1',
         #
-        # "predicted_stock_return_f1",
+        "predicted_stock_return_f1",
         # "flow_estimation_fitted_f1",
         "fake_2"
     ]
@@ -100,20 +132,22 @@ if __name__ == "__main__":
 
     dates = td.get_trading_dates(start_date, end_date)
     # IC = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC, direction=-1)
+
+    result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_topret)
     import pandas as pd
 
     # df = pd.DataFrame(IC, index=dates, columns=factors)
     # print(df)
-    result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC)
-    print(pd.DataFrame(result, index=dates, columns=factors))
+    # result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC)
+    # print(pd.DataFrame(result, index=dates, columns=factors))
 
 
-    result = calculate_factor_autocorrelation(factors, dates, pool_name)
+    # result = calculate_factor_autocorrelation(factors, dates, pool_name)
 
     # # result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC,
     #                                   direction=1)
 
     df = pd.DataFrame(result, index=dates, columns=factors)
-    # df.to_csv("model_f_factor_autocorrelation.csv")
-    print(df)
+    df.to_csv("model_f_topret.csv")
+
 

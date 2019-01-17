@@ -4,7 +4,6 @@ from collider.data.base_data_source import BaseDataSource
 from common.configure import read_configure
 from collider.utils.logger import system_log
 
-
 system_log.level_name = "INFO"
 bundle_path = read_configure(name="test")['bundle_path']
 
@@ -34,11 +33,12 @@ def calculate_factor_feature(factors, forward_return_name, pool_name, dates, fun
 def calculate_IC(a, b, pool, **kwargs):
     try:
         direction = kwargs.get("direction", 1)
-        factor_topRt = kwargs.get("factor_topRt",1.0)
+        factor_topRt = kwargs.get("factor_topRt", 1.0)
 
+        total_cnt = np.sum(pool)
         v = direction * a
         v[~pool] = np.nan
-        topN = np.ceil(np.sum(~np.isnan(v)) *  factor_topRt).astype(int)
+        topN = np.ceil(total_cnt * factor_topRt).astype(int)
         v[np.argsort(-v)[topN:]] = np.nan
         return spearmanr(v[pool], b[pool], nan_policy="omit")[0]
     except Exception as e:
@@ -69,6 +69,7 @@ def calculate_autocorrelation(factor_name, date, pool, **kwargs):
     yesterday_data = load_data_from_npy(td.get_previous_trading_date(date), factor_name)
     return calculate_IC(today_data, yesterday_data, pool, **kwargs)
 
+
 def calculate_factor_autocorrelation(factors, dates, pool_name, **kwargs):
     if isinstance(dates, list) or isinstance(dates, np.ndarray):
         result = np.array([calculate_factor_autocorrelation(factors, date, pool_name, **kwargs) for date in dates])
@@ -78,20 +79,22 @@ def calculate_factor_autocorrelation(factors, dates, pool_name, **kwargs):
         rawIC = np.array([calculate_autocorrelation(f, dates, pool, **kwargs) for f in factors])
         return rawIC
 
-def calculate_hithot(a, b, pool, **kwargs):
-    #factor_topN = kwargs.get("factor_topN", 500)
-    #ret_topN = kwargs.get("ret_topN", 1000)
 
-    factor_topRt = kwargs.get("factor_topRt",0.2)
-    ret_topRt  = kwargs.get("ret_topRt",0.3)
+def calculate_hithot(a, b, pool, **kwargs):
+    # factor_topN = kwargs.get("factor_topN", 500)
+    # ret_topN = kwargs.get("ret_topN", 1000)
+
+    factor_topRt = kwargs.get("factor_topRt", 0.2)
+    ret_topRt = kwargs.get("ret_topRt", 0.3)
 
     # a 是因子值，b是forward_return
     ret = np.where(pool, b, np.nan)
     v = np.where(pool, a, np.nan)
 
+    total_cnt = np.sum(pool)
     # 根据 比例（传入参数），计算factor 和 ret 覆盖股票数目
-    ret_topN = np.ceil(np.sum(~np.isnan(ret))  * ret_topRt).astype(int)
-    factor_topN  =  np.ceil(np.sum(~np.isnan(v))  * factor_topRt).astype(int)
+    ret_topN = np.ceil(total_cnt * ret_topRt).astype(int)
+    factor_topN = np.ceil(total_cnt * factor_topRt).astype(int)
 
     code_a = np.argsort(-ret)[:ret_topN]
     code_b = np.argsort(-v)[:factor_topN]
@@ -108,7 +111,8 @@ def calculate_topret(a, b, pool, **kwargs):
     ret = np.where(pool, b, np.nan)
     v = np.where(pool, a, np.nan)
 
-    factor_topN = np.ceil(np.sum(~np.isnan(v)) * factor_topRt).astype(int)
+    total_cnt = np.sum(pool)
+    factor_topN = np.ceil(total_cnt * factor_topRt).astype(int)
 
     weight = np.ones(factor_topN)
     weight /= np.nansum(weight)
@@ -117,11 +121,8 @@ def calculate_topret(a, b, pool, **kwargs):
     return np.nansum(ret[code_index] * weight)
 
 
-
-
-
 if __name__ == "__main__":
-    start_date = "20110218"
+    start_date = "20100101"
     end_date = "20190101"
     factors = [
         # 'benew_p5_ma10_hist_tvalue_p06_20180531_t7_0606221539248_after_f1',
@@ -148,14 +149,13 @@ if __name__ == "__main__":
     dates = td.get_trading_dates(start_date, end_date)
     # IC = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC, direction=-1)
 
-    result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC,factor_topRt=0.2)
+    result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC, factor_topRt=0.2)
     import pandas as pd
 
     # df = pd.DataFrame(IC, index=dates, columns=factors)
     # print(df)
     # result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC)
     # print(pd.DataFrame(result, index=dates, columns=factors))
-
 
     # result = calculate_factor_autocorrelation(factors, dates, pool_name)
 
@@ -164,5 +164,3 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(result, index=dates, columns=factors)
     df.to_csv("model_top_ic.csv")
-
-

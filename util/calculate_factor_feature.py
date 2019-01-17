@@ -6,7 +6,7 @@ from collider.utils.logger import system_log
 
 
 system_log.level_name = "INFO"
-bundle_path = read_configure()['bundle_path']
+bundle_path = read_configure(name="test")['bundle_path']
 
 DataSource = BaseDataSource()
 DataSource.initialize(bundle_path)
@@ -34,7 +34,13 @@ def calculate_factor_feature(factors, forward_return_name, pool_name, dates, fun
 def calculate_IC(a, b, pool, **kwargs):
     try:
         direction = kwargs.get("direction", 1)
-        return spearmanr(direction * a[pool], b[pool], nan_policy="omit")[0]
+        factor_topRt = kwargs.get("factor_topRt",1.0)
+
+        v = direction * a
+        v[~pool] = np.nan
+        topN = np.ceil(np.sum(~np.isnan(v)) *  factor_topRt).astype(int)
+        v[np.argsort(-v)[topN:]] = np.nan
+        return spearmanr(v[pool], b[pool], nan_policy="omit")[0]
     except Exception as e:
         print(e)
 
@@ -73,12 +79,19 @@ def calculate_factor_autocorrelation(factors, dates, pool_name, **kwargs):
         return rawIC
 
 def calculate_hithot(a, b, pool, **kwargs):
-    factor_topN = kwargs.get("factor_topN", 500)
-    ret_topN = kwargs.get("ret_topN", 1000)
+    #factor_topN = kwargs.get("factor_topN", 500)
+    #ret_topN = kwargs.get("ret_topN", 1000)
+
+    factor_topRt = kwargs.get("factor_topRt",0.2)
+    ret_topRt  = kwargs.get("ret_topRt",0.3)
 
     # a 是因子值，b是forward_return
     ret = np.where(pool, b, np.nan)
     v = np.where(pool, a, np.nan)
+
+    # 根据 比例（传入参数），计算factor 和 ret 覆盖股票数目
+    ret_topN = np.ceil(np.sum(~np.isnan(ret))  * ret_topRt).astype(int)
+    factor_topN  =  np.ceil(np.sum(~np.isnan(v))  * factor_topRt).astype(int)
 
     code_a = np.argsort(-ret)[:ret_topN]
     code_b = np.argsort(-v)[:factor_topN]
@@ -89,17 +102,19 @@ def calculate_hithot(a, b, pool, **kwargs):
 
 
 def calculate_topret(a, b, pool, **kwargs):
-    topN = kwargs.get("topN", 500)
-    weight = kwargs.get("weight", np.ones(topN))
+    factor_topRt = kwargs.get("factor_topRt", 0.2)
 
-    weight /= np.nansum(weight)
-
+    # a 是因子值，b是forward_return
     ret = np.where(pool, b, np.nan)
     v = np.where(pool, a, np.nan)
 
-    code_index = np.argsort(-v)[:topN]
-    return np.nansum(ret[code_index] * weight)
+    factor_topN = np.ceil(np.sum(~np.isnan(v)) * factor_topRt).astype(int)
 
+    weight = np.ones(factor_topN)
+    weight /= np.nansum(weight)
+
+    code_index = np.argsort(-v)[:factor_topN]
+    return np.nansum(ret[code_index] * weight)
 
 
 
@@ -107,7 +122,7 @@ def calculate_topret(a, b, pool, **kwargs):
 
 if __name__ == "__main__":
     start_date = "20110218"
-    end_date = "20190111"
+    end_date = "20190101"
     factors = [
         # 'benew_p5_ma10_hist_tvalue_p06_20180531_t7_0606221539248_after_f1',
         # 'benew_p5_ma10_0322001055_after_f1',
@@ -124,7 +139,7 @@ if __name__ == "__main__":
         # 'benew_p1_noma_tvalue_20180702_0722152621667_after_f1',
         #
         "predicted_stock_return_f1",
-        # "flow_estimation_fitted_f1",
+        "flow_estimation_fitted_f1",
         "fake_2"
     ]
     pool_name = "pool_01_final_f1"
@@ -133,7 +148,7 @@ if __name__ == "__main__":
     dates = td.get_trading_dates(start_date, end_date)
     # IC = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC, direction=-1)
 
-    result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_topret)
+    result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC,factor_topRt=0.2)
     import pandas as pd
 
     # df = pd.DataFrame(IC, index=dates, columns=factors)
@@ -148,6 +163,6 @@ if __name__ == "__main__":
     #                                   direction=1)
 
     df = pd.DataFrame(result, index=dates, columns=factors)
-    df.to_csv("model_f_topret.csv")
+    df.to_csv("model_top_ic.csv")
 
 

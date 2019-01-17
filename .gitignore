@@ -110,3 +110,6 @@ log-*
 # error files
 error/
 cache/
+*.idea
+configure_test/
+run_test.py

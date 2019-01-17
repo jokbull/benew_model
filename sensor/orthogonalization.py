@@ -83,6 +83,7 @@ class Orthogonalization_Schmidt(Sensor):
                         mask=m,
                         neutralize_matrixX=result,
                         hasconst=True)  # 必须加常数项，保证正交
+                    DataProcessingWithMask.do_z_score_processing(array=thiscol,mask=m)
                 except Exception as e:
                     raise (e)
                 result = np.c_[result, thiscol]

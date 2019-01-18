@@ -61,4 +61,13 @@ class GetFactorData(Sensor):
                 except Exception as ex:
                     self.logger.warn('%s, date: %s, factor: %s' % (ex, as_of_date, key))
 
+            else:
+                # 因子值全是nan的情况，填充1（20160107）
+                self.logger.warning("date ,{} ,factor {} all nan ,replace nan by 1 ".format(as_of_date, key))
+                if result is None:
+                    result = np.full(len(x),1)
+                else:
+                    result = np.c_[result, np.full(len(x),1)]
+                column.append(key)
+
         return result, np.array(column)

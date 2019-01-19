@@ -115,4 +115,6 @@ configure_test/
 flow_test/
 util_test/
 run_test.py
+report/
+persist/
 

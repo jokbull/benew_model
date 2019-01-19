@@ -5,6 +5,7 @@
 import numpy as np
 from collider.data.sensor import Sensor
 from collider.utils.data_process import DataProcessingWithMask
+from collider.utils.logger import user_log
 
 """
 """
@@ -83,7 +84,11 @@ class Orthogonalization_Schmidt(Sensor):
                         mask=m,
                         neutralize_matrixX=result,
                         hasconst=True)  # 必须加常数项，保证正交
-                    DataProcessingWithMask.do_z_score_processing(array=thiscol,mask=m)
+                    thiscol = DataProcessingWithMask.do_z_score_processing(array=thiscol,mask=m)
+                    if np.all(~np.isfinite(thiscol)):
+                        user_log.warning("Orthogonalization_Schmidt warning : {} filled by 1".format(column[i]))
+                        thiscol = np.full(len(thiscol),1.0)
+
                 except Exception as e:
                     raise (e)
                 result = np.c_[result, thiscol]

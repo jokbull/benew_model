@@ -47,16 +47,36 @@ class SqliteWrapper2(object):
         self.engine = create_engine('sqlite:///%s' % dbfile)
 
     def select(self, trade_date, strategy, item):
+        """
+        按Key在数据库取Value
+        :param trade_date:
+        :param strategy:
+        :param item:
+        :return:
+        """
         itemstr = "','".join(item)
         qry = "select * from strategy_deriv where trade_date = '%s' and strategy = '%s' and item in ('%s')" % (trade_date, strategy, itemstr)
         return self.select_query(qry)
 
     def select_query(self, query):
+        """
+        执行SQL-SELECT-QUERY
+        :param query:
+        :return:
+        """
         return pd.read_sql_query(query, self.engine)
 
     def insert_long_table(self, name, df: pd.DataFrame, **kwargs):
+        """
+        插入长表
+        :param name:
+        :param df:
+        :param kwargs:
+        :return:
+        """
 
-        df.to_sql('my_tmp', self.engine, if_exists='replace', index=True)
+        # FIXME: 这里my_tmp应该是一个random的字符串
+        df.to_sql('my_tmp', self.engine, if_exists='replace', index=False)
 
         conn = self.engine.connect()
         trans = conn.begin()
@@ -75,6 +95,13 @@ class SqliteWrapper2(object):
             raise
 
     def insert_wide_table(self, name, df: pd.DataFrame, **kwargs):
+        """
+        插入宽表
+        :param name:
+        :param df:
+        :param kwargs:
+        :return:
+        """
         newdf = pd.melt(df, id_vars=["trade_date", "strategy"], var_name="item")
         self.insert_long_table(name, newdf, **kwargs)
 

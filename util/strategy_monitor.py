@@ -38,6 +38,10 @@ def holding_feature(trade_date, strategy_path: str, features=[], hedge_index="we
             # 从bundle读predicted_stock_return
             kwargs["stock_return"] = load_data_from_npy(trade_date_array, [kwargs.get("stock_return_name")])
 
+        # load pool if necessary
+        if "pool_name" in kwargs:
+            kwargs["pool"] = load_data_from_npy(trade_date_array, kwargs.get("pool_name"))
+
         # step 2. read strategy holding
         kwargs["holding_weight"] = read_holding(trade_date_array, strategy_path, offset=0, return_type="numpy")
 
@@ -50,23 +54,21 @@ def holding_feature(trade_date, strategy_path: str, features=[], hedge_index="we
         # step 4. 计算特征
         result = []
         for fun, name, args in features:
+            items = name if isinstance(name, list) else [name]
             result = result + [pd.DataFrame({
                 "trade_date": trade_date_array,
                 "strategy": os.path.basename(strategy_path),
-                "item": name if isinstance(name, list) else [name],
-                "value": fun(**kwargs, **args)
+                "item": items,
+                "value": fun(trade_date=trade_date_array, item=items, **kwargs, **args)
             })]
         result = pd.concat(result)
 
     return result
 
 
-def holding_attribution(trade_date: str, strategy_path: str, factors, **kwargs):
+def calculate_attribution(**kwargs):
     """
     归因
-    :param trade_date:
-    :param strategy_path:
-    :param factors:
     :param kwargs:
     :return:
     """
@@ -94,6 +96,18 @@ if __name__ == "__main__":
     d = holding_feature(("20190102", "20190104"), "/Volumes/会牛/策略管理/benew/Simulation/swing6f",
                         features=_calculate_exposure_features + _calculate_rank_features,
                         stock_return_name="predicted_stock_return_f1",
-                        factors=factors)
+                        factors=factors,
+                        strategy="swing6f",
+                        )
     # d.to_csv("test.csv")
     print(d)
+
+    # attribution = holding_feature(trade_date=("20190102", "20190104"),
+    #                               strategy_path="/Volumes/会牛/策略管理/benew/Simulation/swing6f",
+    #                               features=[(calculate_attribution,
+    #                                          ["attr_" + _ for _ in factors],
+    #                                          {})],
+    #                               stock_return="forward_return_1_close_f1",
+    #                               pool="pool_01_final_f1",
+    #                               factor=factors)
+

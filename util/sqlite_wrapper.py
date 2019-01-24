@@ -1,6 +1,8 @@
 # import sqlite3 as sqlite
 from sqlalchemy import create_engine
 import pandas as pd
+
+
 #
 # class SqliteWrapper(object):
 #     def __init__(self, dbfile):
@@ -39,12 +41,24 @@ import pandas as pd
 #             self.__cursor.execute(sql)
 #         self.__conn.commit()
 
-
-DB_FILE = "s.db"
-
+"""
+SqliteWrapper用单例模式, 在运行程序前手动实例化，指定特定的dbfile
+"""
 class SqliteWrapper2(object):
-    def __init__(self, dbfile=DB_FILE):
+    _instance = None
+
+    def __init__(self, dbfile):
+        SqliteWrapper2._instance = self
         self.engine = create_engine('sqlite:///%s' % dbfile)
+
+    @classmethod
+    def get_instance(cls, dbfile=":memory:"):
+        """
+        返回已经创建的 BaseDataSource 对象
+        """
+        if SqliteWrapper2._instance is None:
+            return SqliteWrapper2(dbfile)
+        return SqliteWrapper2._instance
 
     def select(self, trade_date, strategy, item):
         """
@@ -55,7 +69,8 @@ class SqliteWrapper2(object):
         :return:
         """
         itemstr = "','".join(item)
-        qry = "select * from strategy_deriv where trade_date = '%s' and strategy = '%s' and item in ('%s')" % (trade_date, strategy, itemstr)
+        qry = "select * from strategy_deriv where trade_date = '%s' and strategy = '%s' and item in ('%s')" % (
+        trade_date, strategy, itemstr)
         return self.select_query(qry)
 
     def select_query(self, query):

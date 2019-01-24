@@ -24,8 +24,8 @@ def np_cache(function):
 
 
 class cache(object):
-    def __init__(self, dbfile=":memory:"):
-        self.sqlite = SqliteWrapper2(dbfile)
+    def __init__(self):
+        self.sqlite = SqliteWrapper2.get_instance()
 
     def __call__(self, func):  # 接受函数
         def wrapper(*args, **kwargs):

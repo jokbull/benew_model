@@ -53,6 +53,8 @@ def holding_feature(trade_date, strategy_path: str, features=[], hedge_index="we
 
         # step 4. 计算特征
         result = []
+
+        # FIXME：这里可以考虑到底是用numpy还是pandas， 建议统一到pandas
         for fun, name, args in features:
             items = name if isinstance(name, list) else [name]
             result = result + [pd.DataFrame({

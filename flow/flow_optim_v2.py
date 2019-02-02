@@ -6,7 +6,95 @@ from collider.sensor.get_factor_list import FactorList
 from sensor.get_factor_data_v2 import GetFactorData
 
 
-class flow_optim_v0(L1Norm):
+class flow_optim_v2(L1Norm):
+
+
+
+    def optim_flow(self, trading_date, **kwargs):
+        context = {}
+        # FIXME:
+        # 这是根据trading_date, 读取相应的暴露等级，构造成如下的dict形式
+        # context["risk_condition"] = {
+        #     "up": {
+        #         'style_size_2': 0.0005,
+        #         'style_beta_2': 0.0005,
+        #         'industry_商贸零售': 0.03,
+        #         'industry_石油石化': 0.03,
+        #         'industry_国防军工': 0.03,
+        #         'industry_传媒': 0.03,
+        #         'industry_餐饮旅游': 0.03,
+        #         'industry_汽车': 0.03,
+        #         'industry_电力及公用事业': 0.03,
+        #         'industry_电力设备': 0.03,
+        #         'industry_综合': 0.03,
+        #         'industry_计算机': 0.03,
+        #         'industry_医药': 0.03,
+        #         'industry_建材': 0.03,
+        #         'industry_农林牧渔': 0.03,
+        #         'industry_机械': 0.03,
+        #         'industry_纺织服装': 0.03,
+        #         'industry_保险Ⅱ': 0.03,
+        #         'industry_食品饮料': 0.03,
+        #         'industry_信托及其他': 0.03,
+        #         'industry_电子元器件': 0.03,
+        #         'industry_煤炭': 0.03,
+        #         'industry_建筑': 0.03,
+        #         'industry_银行': 0.03,
+        #         'industry_基础化工': 0.03,
+        #         'industry_证券Ⅱ': 0.03,
+        #         'industry_家电': 0.03,
+        #         'industry_交通运输': 0.03,
+        #         'industry_钢铁': 0.03,
+        #         'industry_有色金属': 0.03,
+        #         'industry_通信': 0.03,
+        #         'industry_轻工制造': 0.03,
+        #         'industry_房地产': 0.03
+        #     },
+        #     "down": {
+        #         'style_size_2': 0.0005,
+        #         'style_beta_2': 0.0005,
+        #         'industry_商贸零售': 0.03,
+        #         'industry_石油石化': 0.03,
+        #         'industry_国防军工': 0.03,
+        #         'industry_传媒': 0.03,
+        #         'industry_餐饮旅游': 0.03,
+        #         'industry_汽车': 0.03,
+        #         'industry_电力及公用事业': 0.03,
+        #         'industry_电力设备': 0.03,
+        #         'industry_综合': 0.03,
+        #         'industry_计算机': 0.03,
+        #         'industry_医药': 0.03,
+        #         'industry_建材': 0.03,
+        #         'industry_农林牧渔': 0.03,
+        #         'industry_机械': 0.03,
+        #         'industry_纺织服装': 0.03,
+        #         'industry_保险Ⅱ': 0.03,
+        #         'industry_食品饮料': 0.03,
+        #         'industry_信托及其他': 0.03,
+        #         'industry_电子元器件': 0.03,
+        #         'industry_煤炭': 0.03,
+        #         'industry_建筑': 0.03,
+        #         'industry_银行': 0.03,
+        #         'industry_基础化工': 0.03,
+        #         'industry_证券Ⅱ': 0.03,
+        #         'industry_家电': 0.03,
+        #         'industry_交通运输': 0.03,
+        #         'industry_钢铁': 0.03,
+        #         'industry_有色金属': 0.03,
+        #         'industry_通信': 0.03,
+        #         'industry_轻工制造': 0.03,
+        #         'industry_房地产': 0.03
+        #     }
+        # }
+
+        # 当预测时，假定是每天开盘前进行预测
+        self._optim_flow.run(date=trading_date, **context)
+        optim_flow = self.user_context.flow_config.get("optim_flow_name", "optim_flow")
+
+        return self._optim_flow.data_manager.get_tensor(trading_date,
+                                                        f"{optim_flow}.optimizationStockWeight.targetWeight").data
+
+
     def initialize(self):
         self.user_context.update("alphaFactorDataFrame", FactorList(
             file=self.user_context.alpha_file,

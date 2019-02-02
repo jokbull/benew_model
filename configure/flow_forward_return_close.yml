@@ -1,0 +1,19 @@
+base:
+   # 回测起始日期，str类型
+   start_date: "20100101"
+   # 回测结束日期(如果是实盘，则忽略该配置)，str类型
+   end_date: "20190111"
+   resume_mode: False
+
+
+strategy:
+   # 通过该参数可以将预定义变量传入 `context` 内。
+   context_vars:
+       forward_period: 5
+       pool_name: pool_01_final_f1
+       risk_file: configure/BarraStyle.csv
+       est_open_price: lclose_aft
+       est_close_price: lclose_aft
+       out_name: close
+       flow_config:
+           est_flow_name: flow_forward_return

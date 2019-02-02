@@ -57,7 +57,7 @@ class SqliteWrapper2(object):
         返回已经创建的 BaseDataSource 对象
         """
         if SqliteWrapper2._instance is None:
-            return SqliteWrapper2(dbfile)
+            SqliteWrapper2._instance = SqliteWrapper2(dbfile)
         return SqliteWrapper2._instance
 
     def select(self, trade_date, strategy, item):

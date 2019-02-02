@@ -30,21 +30,50 @@ def ndarray_to_dataframe(array, **kwargs):
     return pd.DataFrame({'wind_code': __ds__.codes, kwargs.get("column_name", "value"): array})
 
 
-def read_holding(trade_date, strategy_path, offset=0, return_type="numpy"):
+def get_last_file(path, date=None, key=None):
+    """获取(小于等于指定日期)含有指定 key 的文件
+    """
+    files = []
+    for fn in os.listdir(path):
+        if key is not None:
+            if fn.find(key) == -1:
+                continue
+
+        timestampstr = fn.split("_")[-1]
+        if date is None:
+            files.append(fn)
+        elif timestampstr[:8] <= date:
+            files.append(fn)
+    try:
+        return os.path.join(path, max(files))
+    except ValueError:
+        return None
+    except Exception:
+        raise
+
+
+def read_holding(trade_date, strategy_path, offset=0, return_type="numpy", report_path="report"):
     """
     读持仓数据
     :param trade_date:
     :param strategy_path:
     :param offset: 持仓日期的偏移，offset=1为昨日
     :param return_type: numpy or pandas
+    :param report_path: "report", 如果report下有多个目录，那么就是"report/optim_v0"
     :return:
     """
     date = __td__.get_previous_trading_date(trade_date, offset)
-    holding_path = os.path.join(strategy_path, "holding", "%s.csv" % date)
+    if os.path.exists(os.path.join(strategy_path, "holding")):
+        holding_path = os.path.join(strategy_path, "holding", "%s.csv" % date)
+    else:
+        holding_folder = os.path.join(strategy_path, report_path)
+        # 找到最新的holding文件
+        holding_path = get_last_file(holding_folder, key="holdings")
 
     # 为了确保中文路径也可以读
     with open(holding_path, "r") as infile:
-        holding_df = pd.read_csv(infile)
+        holding_df = pd.read_csv(infile, dtype={'trade_date': str, 'wind_code': str})
+        holding_df = holding_df[holding_df.trade_date == date]
 
     holding_array = dataframe_to_ndarray(holding_df)
     # price

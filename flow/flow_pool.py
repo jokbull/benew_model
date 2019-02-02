@@ -56,7 +56,8 @@ class flow_pool(Strategy):
                                              input_var=[f"{flow_name}.factor_as_of_date.date"],
                                              kwds={"pool_name": self.user_context.pool_name,
                                                    "benchmark_weight": "weight_index_500"
-                                                   })
+                                                   },
+                                             silent=False)
 
         # module 11. 保存
         self._estimation_flow.add_next_step2(

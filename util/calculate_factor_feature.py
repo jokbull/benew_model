@@ -1,20 +1,10 @@
 import numpy as np
 from scipy.stats import spearmanr
-from collider.data.base_data_source import BaseDataSource
-from common.configure import read_configure
+from common.data_source_from_bundle import __td__, load_data_from_npy
 from collider.utils.logger import system_log
 
 system_log.level_name = "INFO"
-bundle_path = read_configure(name="test")['bundle_path']
 
-DataSource = BaseDataSource()
-DataSource.initialize(bundle_path)
-
-td = DataSource.trading_dates
-
-
-def load_data_from_npy(trade_date, factor_name):
-    return DataSource.get_bar(trade_date, [factor_name])[factor_name]
 
 
 def calculate_factor_feature(factors, forward_return_name, pool_name, dates, func, **kwargs) -> np.ndarray:
@@ -66,7 +56,7 @@ def calculate_tvalue(a, b, pool, **kwargs):
 
 def calculate_autocorrelation(factor_name, date, pool, **kwargs):
     today_data = load_data_from_npy(date, factor_name)
-    yesterday_data = load_data_from_npy(td.get_previous_trading_date(date), factor_name)
+    yesterday_data = load_data_from_npy(__td__.get_previous_trading_date(date), factor_name)
     return calculate_IC(today_data, yesterday_data, pool, **kwargs)
 
 
@@ -138,19 +128,32 @@ if __name__ == "__main__":
         # 'benew_p02_noma_tvalue_20180901_tp_0935_1000_0923223647237_after_f1',
         # 'benew_p02_WTOP_R1011_20180928_tp_0935_1000_1017133635924_after_f1',
         # 'benew_p1_noma_tvalue_20180702_0722152621667_after_f1',
-        #
+        # 'benew_p1_noma_tvalue_20180702_0722152621667_after',
         "predicted_stock_return_f1",
         "flow_estimation_fitted_f1",
+        "predicted_stock_return_r1",
+        "flow_estimation_fitted_r1",
         "fake_2"
     ]
     pool_name = "pool_01_final_f1"
     forward_return_name = "forward_return_5_f1"
 
-    dates = td.get_trading_dates(start_date, end_date)
+    dates = __td__.get_trading_dates(start_date, end_date)
     # IC = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC, direction=-1)
 
-    result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC, factor_topRt=0.2)
     import pandas as pd
+
+    result = []
+    for forward_period in [5]:
+        system_log.info(forward_period)
+        forward_return_name = "forward_return_%s_close_f1" % forward_period
+        res = pd.DataFrame(
+            calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC, factor_topRt=1),
+            index=dates, columns=factors)
+        res["forward_period"] = forward_period
+        result.append(res)
+
+    df = pd.concat(result)
 
     # df = pd.DataFrame(IC, index=dates, columns=factors)
     # print(df)
@@ -162,5 +165,5 @@ if __name__ == "__main__":
     # # result = calculate_factor_feature(factors, forward_return_name, pool_name, dates, calculate_IC,
     #                                   direction=1)
 
-    df = pd.DataFrame(result, index=dates, columns=factors)
-    df.to_csv("model_top_ic.csv")
+    # df = pd.DataFrame(result, index=dates, columns=factors)
+    df.to_csv("model_r_ic.csv")

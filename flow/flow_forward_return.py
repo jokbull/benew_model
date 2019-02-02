@@ -98,6 +98,11 @@ class flow_forward_return(Strategy):
         user_log.info("est open_price_type is : " + open_price_type)
         user_log.info("est close_price_type is : " + close_price_type)
 
+        try:
+            out_name = self.user_context.out_name
+        except Exception as e:
+            out_name = open_price_type
+
         # module 8. 取return数据
         self._estimation_flow.add_next_step2(name="returnData",
                                              sensor=GetReturnData, call=None,
@@ -127,7 +132,7 @@ class flow_forward_return(Strategy):
                 'bundle': self.user_context.config.base.data_bundle_path,
                 'suffix': 'f1',
                 'type': "return",
-                'name': "forward_return_%d" % self.user_context.forward_period
+                'name': "forward_return_%s_%s" % (self.user_context.forward_period, out_name)
             }
         )
 

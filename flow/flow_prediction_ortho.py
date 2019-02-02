@@ -140,7 +140,7 @@ class flow_prediction_ortho(Strategy):
                        f"{pred_flow}.predictionStockReturn.stockReturn"],
             kwds={
                 'bundle': self.user_context.config.base.data_bundle_path,
-                'suffix': 'f1',
+                'suffix': 'r1',
                 'type': "return",
                 'name': "predicted_stock_return"
             }

@@ -15,7 +15,7 @@ class SaveToBundle(object):
 
         factor_name = kwargs['factor_name']
         bundle_path = kwargs.get('bundle_path', '/data/bundle')
-        self.filename = os.path.join(bundle_path, 'factor', f"{factor_name}.npy")
+        self.filename = os.path.join(bundle_path, 'temporary', f"{factor_name}.npy")
         if os.path.exists(self.filename):
             raise FileExistsError(self.filename)
 
@@ -34,12 +34,11 @@ class SaveToBundle(object):
             raise KeyError("not found %s" % trade_date)
         self.fp[(date_index * 4000):(date_index * 4000 + 4000)] = arr
 
+    # https://stackoverflow.com/questions/23422188/why-am-i-getting-nameerror-global-name-open-is-not-defined-in-del
     def flush(self):
-        # self.fp.flush()
         np.save(file=self.filename, arr=self.fp)
 
     def __del__(self):
-        print("__del__ %s" % self.filename)
         self.flush()
 
 
@@ -48,6 +47,11 @@ class SaveToBundleSensor(Sensor):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.fp_dict = {}
+
+    # def end(self):
+    #     for k, v in self.fp_dict.items():
+    #         self.logger.debug(f"flush {k}")
+    #         v.flush()
 
     def do(self, date: str, mp: MessagePackage, **kwargs) -> tuple:
 
@@ -78,10 +82,6 @@ class SaveToBundleSensor(Sensor):
             self.fp_dict[n].save(trade_date=mp.date, arr=data[:, i])
 
         return ()
-
-    def __del__(self):
-        for k in self.fp_dict.keys():
-            self.fp_dict[k].__del__()
 
 
 class SaveToNPY(Sensor):

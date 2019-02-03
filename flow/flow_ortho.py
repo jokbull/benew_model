@@ -7,18 +7,18 @@
 
 
 from collider.core.strategy import Strategy
-from collider.sensor import *
 from collider.data.data_manager import DataManager
 from collider.utils.logger import user_log
 from collider.utils.data_process import DataProcessing
-from collider.sensor.get_factor_list import FactorList, FACTOR_STYLE
 from collider.data.pipeline.sensor_flow import SensorFlow
+
 
 from sensor.get_pool_v2 import GetPool
 from sensor.get_factor_data_v2 import GetFactorData
 from sensor.orthogonalization import Orthogonalization_Schmidt
 from sensor.save_to_npy import SaveToBundleSensor
-
+from model.sensor.get_factor_list import FactorList, FACTOR_STYLE
+from model.sensor.get_date import GetDate
 
 class flow_ortho(Strategy):
 
@@ -130,10 +130,3 @@ class flow_ortho(Strategy):
     def after_trading(self, event):
         self.user_context.DM.flush(event.trading_dt.strftime("%Y%m%d"))
 
-    # FIXME: 需要显式调用Sensor的析构函数, 可能和Sensor是Singleton有关(永远不会自动触发）
-    def end(self, event):
-        for k in self._estimation_flow._pipeline:
-            try:
-                k._sensor.__del__()
-            except AttributeError:
-                pass
